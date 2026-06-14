@@ -1,0 +1,103 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\title{Campus Collaboration Finder: A Skill-Based Project Matching Platform for University Students}
+
+\author{\IEEEauthorblockN{Tufail Ihsan}
+\IEEEauthorblockA{\textit{Department of Computing Science}\\
+University\\
+Email: tufailihsan20@gmail.com}
+\and
+\IEEEauthorblockN{Muhammad Azam}
+\IEEEauthorblockA{\textit{Department of Computing Science}\\
+University\\
+Email: axamkhan7@gmail.com}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Campus Collaboration Finder is a web-based platform that connects university students for collaborative projects through skill-based matching. Students can create profiles, post projects with required skills, apply to projects, and receive AI-powered recommendations. The system is built using Flask (Python) backend, MySQL database, and a responsive frontend. It provides full CRUD functionality along with a smart matching algorithm that calculates skill match percentage.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Skill-based Matching, Project Collaboration, Recommendation System, Flask API, MySQL, Web Application
+\end{IEEEkeywords}
+
+\section{Introduction}
+Finding suitable team members for academic projects is often challenging for university students. This project aims to solve this issue by developing a centralized platform that matches students with projects based on their skills.
+
+\section{System Design}
+
+\subsection{Entity Relationship Diagram}
+Figure~\ref{fig:erd} shows the Entity Relationship Diagram of the system.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.85\textwidth]{erd.jpeg}
+\caption{Entity Relationship Diagram (ERD) of Campus Collaboration Finder}
+\label{fig:erd}
+\end{figure}
+
+\subsection{Database Tables}
+The system uses six main tables: Students, Skills, Student\_Skills, Projects, Project\_Skills, and Applications.
+
+\section{Implementation and User Interface}
+
+\subsection{Students Management}
+Figure~\ref{fig:students} shows the Students management interface.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.9\textwidth]{db ui st.png}
+\caption{Students Management Interface}
+\label{fig:students}
+\end{figure}
+
+\subsection{Projects Management}
+Figure~\ref{fig:projects} shows the Projects section.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.9\textwidth]{project.png}
+\caption{Projects Management Interface}
+\label{fig:projects}
+\end{figure}
+
+\subsection{Applications Management}
+Figure~\ref{fig:applications} shows the Applications panel.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.9\textwidth]{appl.png}
+\caption{Applications Management Interface}
+\label{fig:applications}
+\end{figure}
+
+\subsection{AI Recommendation System}
+The system includes an intelligent recommendation feature. Figure~\ref{fig:recommend} shows the AI Match page.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.9\textwidth]{db 2.png}
+\caption{AI-Powered Project Recommendation Interface}
+\label{fig:recommend}
+\end{figure}
+
+\section{Conclusion}
+The Campus Collaboration Finder successfully provides a complete solution for campus project collaboration with skill-based matching.
+
+\begin{thebibliography}{00}
+\bibitem{1} Flask Documentation, \url{https://flask.palletsprojects.com/}
+\bibitem{2} MySQL Official Documentation, \url{https://dev.mysql.com/doc/}
+\end{thebibliography}
+
+\end{document}

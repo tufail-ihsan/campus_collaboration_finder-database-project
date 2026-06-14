@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Collaboration Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   CSS VARIABLES
+   ===================================================== */
+:root {
+  --bg:      #0b0d12;
+  --surf:    #131720;
+  --card:    #181d28;
+  --border:  #252d3d;
+  --accent:  #5b8dee;
+  --purple:  #8b6cf7;
+  --green:   #36d97b;
+  --red:     #f76060;
+  --yellow:  #f7c84a;
+  --cyan:    #3dd4f0;
+  --text:    #dde3f0;
+  --muted:   #7a849e;
+  --r:       9px;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Outfit', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* =====================================================
+   LAYOUT
+   ===================================================== */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+aside {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--surf);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.brand {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: .1em;
+  padding: .5rem 1.2rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: .5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem 1.2rem;
+  cursor: pointer;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--muted);
+  border-left: 3px solid transparent;
+  transition: all .15s;
+  user-select: none;
+}
+.nav-item:hover  { color: var(--text); background: rgba(255,255,255,.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(91,141,238,.08); }
+.nav-icon { font-size: 1rem; width: 18px; text-align: center; }
+
+/* Content area */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.8rem 2rem;
+}
+
+/* =====================================================
+   PANELS
+   ===================================================== */
+.panel { display: none; }
+.panel.active { display: block; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 1.5rem;
+}
+.panel-title {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: .04em;
+}
+.panel-sub {
+  font-size: .75rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+
+/* =====================================================
+   FORM BOX
+   ===================================================== */
+.form-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1rem;
+}
+.form-box-title {
+  font-family: var(--mono);
+  font-size: .68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: .85rem;
+}
+.form-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+
+input, select, textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: .82rem;
+  padding: .48rem .75rem;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+select option { background: var(--surf); }
+textarea { resize: vertical; min-height: 60px; }
+
+.f-sm  { width: 100px; }
+.f-md  { width: 170px; }
+.f-lg  { width: 260px; flex: 1; min-width: 160px; }
+.f-xl  { width: 100%; }
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+.btn {
+  font-family: var(--sans);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .48rem .9rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.btn-primary { background: var(--accent);  color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: #4a7de0; }
+.btn-danger  { background: rgba(247,96,96,.12); color: var(--red);    border-color: rgba(247,96,96,.25); }
+.btn-danger:hover  { background: rgba(247,96,96,.22); }
+.btn-warn    { background: rgba(247,200,74,.12); color: var(--yellow); border-color: rgba(247,200,74,.25); }
+.btn-warn:hover    { background: rgba(247,200,74,.22); }
+.btn-success { background: rgba(54,217,123,.12); color: var(--green);  border-color: rgba(54,217,123,.25); }
+.btn-success:hover { background: rgba(54,217,123,.22); }
+.btn-ghost   { background: transparent; color: var(--muted); border-color: var(--border); }
+.btn-ghost:hover   { color: var(--text); border-color: var(--muted); }
+.btn-sm { font-size: .7rem; padding: .3rem .6rem; }
+
+/* =====================================================
+   SEARCH BAR
+   ===================================================== */
+.search-bar {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .8rem;
+}
+.search-bar input { flex: 1; }
+
+/* =====================================================
+   CARDS / LIST
+   ===================================================== */
+.list-wrap { display: flex; flex-direction: column; gap: .5rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .85rem 1.1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .8rem;
+  animation: fadeUp .18s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.card-body   { flex: 1; min-width: 0; }
+.card-name   { font-weight: 600; font-size: .9rem; margin-bottom: .25rem; }
+.card-meta   { font-size: .75rem; color: var(--muted); line-height: 1.7; }
+.card-meta b { color: var(--text); font-weight: 500; }
+.card-actions { display: flex; gap: .35rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+/* =====================================================
+   BADGES
+   ===================================================== */
+.badge {
+  font-family: var(--mono);
+  font-size: .62rem;
+  font-weight: 600;
+  padding: .12rem .38rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-left: .3rem;
+  vertical-align: middle;
+}
+.b-blue   { background: rgba(91,141,238,.15); color: var(--accent); }
+.b-purple { background: rgba(139,108,247,.15);color: var(--purple); }
+.b-green  { background: rgba(54,217,123,.15); color: var(--green); }
+.b-red    { background: rgba(247,96,96,.15);  color: var(--red); }
+.b-yellow { background: rgba(247,200,74,.15); color: var(--yellow); }
+.b-cyan   { background: rgba(61,212,240,.15); color: var(--cyan); }
+
+/* =====================================================
+   MATCH BAR
+   ===================================================== */
+.match-bar { height: 4px; background: var(--border); border-radius: 3px; margin-top: .4rem; overflow: hidden; }
+.match-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--purple), var(--accent)); }
+
+/* =====================================================
+   EMPTY STATE
+   ===================================================== */
+.empty {
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: .78rem;
+  padding: 2.5rem 0;
+}
+
+/* =====================================================
+   TOAST
+   ===================================================== */
+#toast-wrap {
+  position: fixed;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.toast {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  color: var(--text);
+  font-size: .78rem;
+  padding: .55rem 1rem;
+  border-radius: 6px;
+  min-width: 220px;
+  animation: slideIn .2s ease;
+}
+.toast.err { border-left-color: var(--red); }
+.toast.ok  { border-left-color: var(--green); }
+@keyframes slideIn { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:none; } }
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.4rem 1.6rem;
+  width: min(500px, 96vw);
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.modal h3 {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--accent);
+  letter-spacing: .06em;
+  margin-bottom: 1rem;
+}
+.modal-foot { display: flex; gap: .5rem; justify-content: flex-end; margin-top: 1rem; }
+
+/* =====================================================
+   DIVIDER between sections
+   ===================================================== */
+.section-sep { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+<aside>
+  <div class="brand">CCF // v2</div>
+
+  <div class="nav-item active"  onclick="show('students')">
+    <span class="nav-icon">👤</span> Students
+  </div>
+  <div class="nav-item" onclick="show('skills')">
+    <span class="nav-icon">🛠</span> Skills
+  </div>
+  <div class="nav-item" onclick="show('student_skills')">
+    <span class="nav-icon">🔗</span> Student Skills
+  </div>
+  <div class="nav-item" onclick="show('projects')">
+    <span class="nav-icon">📁</span> Projects
+  </div>
+  <div class="nav-item" onclick="show('project_skills')">
+    <span class="nav-icon">🔗</span> Project Skills
+  </div>
+  <div class="nav-item" onclick="show('applications')">
+    <span class="nav-icon">📝</span> Applications
+  </div>
+  <div class="nav-item" onclick="show('recommend')">
+    <span class="nav-icon">✨</span> AI Match
+  </div>
+</aside>
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 1: STUDENTS
+     Columns: student_id | name | email | department | semester | password | created_at
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-students">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Students</div>
+      <div class="panel-sub">student_id · name · email · department · semester · created_at</div>
+    </div>
+  </div>
+
+  <!-- INSERT STUDENT -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Add New Student</div>
+    <div class="form-row">
+      <input id="s-name"  class="f-md" placeholder="Name">
+      <input id="s-email" class="f-md" placeholder="Email">
+      <input id="s-pass"  class="f-md" type="password" placeholder="Password">
+    </div>
+    <div class="form-row" style="margin-top:.5rem">
+      <input id="s-dept"  class="f-md" placeholder="Department">
+      <input id="s-sem"   class="f-sm" type="number" min="1" max="12" placeholder="Semester (1-12)">
+      <button class="btn btn-primary" onclick="createStudent()">+ Insert</button>
+    </div>
+  </div>
+
+  <!-- SEARCH STUDENTS -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by name / email / department</div>
+    <div class="search-bar">
+      <input id="s-search" class="f-lg" placeholder="Type to search...">
+      <button class="btn btn-ghost" onclick="searchStudents()">Search</button>
+      <button class="btn btn-ghost" onclick="loadStudents()">↻ Load All</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="students-list" class="list-wrap"><div class="empty">Press "Load All" to view students</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 2: SKILLS
+     Columns: skill_id | skill_name
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-skills">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Skills</div>
+      <div class="panel-sub">skill_id · skill_name</div>
+    </div>
+  </div>
+
+  <!-- INSERT SKILL -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Add New Skill</div>
+    <div class="form-row">
+      <input id="sk-name" class="f-lg" placeholder="Skill name (e.g. Python)">
+      <button class="btn btn-primary" onclick="createSkill()">+ Insert</button>
+    </div>
+  </div>
+
+  <!-- SEARCH SKILLS -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by skill name</div>
+    <div class="search-bar">
+      <input id="sk-search" class="f-lg" placeholder="Type to search...">
+      <button class="btn btn-ghost" onclick="searchSkills()">Search</button>
+      <button class="btn btn-ghost" onclick="loadSkills()">↻ Load All</button>
+    </div>
+  </div>
+
+  <div id="skills-list" class="list-wrap"><div class="empty">Press "Load All" to view skills</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 3: STUDENT_SKILLS  (junction table)
+     Columns: student_id | skill_id
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-student_skills">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Student_Skills</div>
+      <div class="panel-sub">student_id · skill_id — which skills a student has</div>
+    </div>
+  </div>
+
+  <!-- INSERT -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Assign a Skill to a Student</div>
+    <div class="form-row">
+      <input id="ss-sid"  class="f-sm" type="number" placeholder="Student ID">
+      <input id="ss-skid" class="f-sm" type="number" placeholder="Skill ID">
+      <button class="btn btn-primary" onclick="assignStudentSkill()">+ Assign</button>
+    </div>
+  </div>
+
+  <!-- DELETE -->
+  <div class="form-box">
+    <div class="form-box-title">DELETE — Remove a Skill from a Student</div>
+    <div class="form-row">
+      <input id="ss-del-sid"  class="f-sm" type="number" placeholder="Student ID">
+      <input id="ss-del-skid" class="f-sm" type="number" placeholder="Skill ID">
+      <button class="btn btn-danger" onclick="removeStudentSkill()">Remove</button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by Student ID and/or Skill ID</div>
+    <div class="form-row">
+      <input id="ss-search-sid"  class="f-sm" type="number" placeholder="Student ID (optional)">
+      <input id="ss-search-skid" class="f-sm" type="number" placeholder="Skill ID (optional)">
+      <button class="btn btn-ghost" onclick="searchStudentSkills()">Search</button>
+      <button class="btn btn-ghost" onclick="loadStudentSkills()">↻ Load All</button>
+    </div>
+  </div>
+
+  <div id="student_skills-list" class="list-wrap"><div class="empty">Press "Load All" to view assignments</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 4: PROJECTS
+     Columns: project_id | owner_id | project_name | description | date_posted
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-projects">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Projects</div>
+      <div class="panel-sub">project_id · owner_id · project_name · description · date_posted</div>
+    </div>
+  </div>
+
+  <!-- INSERT PROJECT -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Create New Project (one owner can have many projects)</div>
+    <div class="form-row">
+      <input id="p-name"  class="f-lg" placeholder="Project Name">
+      <input id="p-owner" class="f-sm" type="number" placeholder="Owner ID">
+    </div>
+    <div class="form-row" style="margin-top:.5rem">
+      <textarea id="p-desc" class="f-xl" placeholder="Description"></textarea>
+    </div>
+    <div class="form-row" style="margin-top:.5rem">
+      <button class="btn btn-primary" onclick="createProject()">+ Insert</button>
+    </div>
+  </div>
+
+  <!-- SEARCH PROJECTS -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by name/description keyword and/or Owner ID</div>
+    <div class="form-row">
+      <input id="p-search-q"   class="f-lg" placeholder="Keyword (optional)">
+      <input id="p-search-oid" class="f-sm" type="number" placeholder="Owner ID (optional)">
+      <button class="btn btn-ghost" onclick="searchProjects()">Search</button>
+      <button class="btn btn-ghost" onclick="loadProjects()">↻ Load All</button>
+    </div>
+  </div>
+
+  <div id="projects-list" class="list-wrap"><div class="empty">Press "Load All" to view projects</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 5: PROJECT_SKILLS  (junction table)
+     Columns: project_id | skill_id
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-project_skills">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Project_Skills</div>
+      <div class="panel-sub">project_id · skill_id — skills required by a project</div>
+    </div>
+  </div>
+
+  <!-- INSERT -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Add a Required Skill to a Project</div>
+    <div class="form-row">
+      <input id="ps-pid"  class="f-sm" type="number" placeholder="Project ID">
+      <input id="ps-skid" class="f-sm" type="number" placeholder="Skill ID">
+      <button class="btn btn-primary" onclick="addProjectSkill()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- DELETE -->
+  <div class="form-box">
+    <div class="form-box-title">DELETE — Remove a Required Skill from a Project</div>
+    <div class="form-row">
+      <input id="ps-del-pid"  class="f-sm" type="number" placeholder="Project ID">
+      <input id="ps-del-skid" class="f-sm" type="number" placeholder="Skill ID">
+      <button class="btn btn-danger" onclick="removeProjectSkill()">Remove</button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by Project ID and/or Skill ID</div>
+    <div class="form-row">
+      <input id="ps-search-pid"  class="f-sm" type="number" placeholder="Project ID (optional)">
+      <input id="ps-search-skid" class="f-sm" type="number" placeholder="Skill ID (optional)">
+      <button class="btn btn-ghost" onclick="searchProjectSkills()">Search</button>
+      <button class="btn btn-ghost" onclick="loadProjectSkills()">↻ Load All</button>
+    </div>
+  </div>
+
+  <div id="project_skills-list" class="list-wrap"><div class="empty">Press "Load All" to view project-skill links</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE 6: APPLICATIONS
+     Columns: application_id | project_id | student_id | status | date_applied
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-applications">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// TABLE: Applications</div>
+      <div class="panel-sub">application_id · student_id · project_id · status · date_applied</div>
+    </div>
+  </div>
+
+  <!-- INSERT APPLICATION -->
+  <div class="form-box">
+    <div class="form-box-title">INSERT — Student Applies to a Project</div>
+    <p style="font-size:.73rem;color:var(--muted);margin-bottom:.7rem">
+      ✅ A student can apply to <b style="color:var(--green)">multiple projects</b> &nbsp;|&nbsp;
+      ❌ Cannot apply to the <b style="color:var(--red)">same project twice</b> (DB enforced)
+    </p>
+    <div class="form-row">
+      <input id="a-sid" class="f-sm" type="number" placeholder="Student ID">
+      <input id="a-pid" class="f-sm" type="number" placeholder="Project ID">
+      <button class="btn btn-primary" onclick="createApplication()">+ Apply</button>
+    </div>
+  </div>
+
+  <!-- UPDATE STATUS -->
+  <div class="form-box">
+    <div class="form-box-title">UPDATE — Change Application Status</div>
+    <div class="form-row">
+      <input id="a-upd-id" class="f-sm" type="number" placeholder="Application ID">
+      <select id="a-upd-status" class="f-md">
+        <option value="pending">pending</option>
+        <option value="approved">approved</option>
+        <option value="rejected">rejected</option>
+      </select>
+      <button class="btn btn-warn" onclick="updateAppStatus()">Update Status</button>
+    </div>
+  </div>
+
+  <!-- DELETE APPLICATION -->
+  <div class="form-box">
+    <div class="form-box-title">DELETE — Withdraw an Application</div>
+    <div class="form-row">
+      <input id="a-del-id" class="f-sm" type="number" placeholder="Application ID">
+      <button class="btn btn-danger" onclick="deleteApplication()">Withdraw</button>
+    </div>
+  </div>
+
+  <!-- SEARCH APPLICATIONS -->
+  <div class="form-box">
+    <div class="form-box-title">SEARCH — by Student ID, Project ID, and/or Status</div>
+    <div class="form-row">
+      <input id="a-search-sid"    class="f-sm" type="number" placeholder="Student ID (opt)">
+      <input id="a-search-pid"    class="f-sm" type="number" placeholder="Project ID (opt)">
+      <select id="a-search-status" class="f-md">
+        <option value="">All statuses</option>
+        <option value="pending">pending</option>
+        <option value="approved">approved</option>
+        <option value="rejected">rejected</option>
+      </select>
+      <button class="btn btn-ghost" onclick="searchApplications()">Search</button>
+      <button class="btn btn-ghost" onclick="loadApplications()">↻ Load All</button>
+    </div>
+  </div>
+
+  <div id="applications-list" class="list-wrap"><div class="empty">Press "Load All" to view applications</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     AI MATCH / RECOMMEND
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-recommend">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">// AI MATCH — Recommend Projects</div>
+      <div class="panel-sub">Matches student skills to project required skills · sorted by match %</div>
+    </div>
+  </div>
+
+  <div class="form-box">
+    <div class="form-box-title">Enter Student ID to get recommendations</div>
+    <div class="form-row">
+      <input id="r-sid" class="f-sm" type="number" placeholder="Student ID">
+      <button class="btn btn-primary" onclick="getRecommendations()">▶ Recommend</button>
+    </div>
+  </div>
+
+  <div id="recommend-list" class="list-wrap"><div class="empty">Enter a student ID above</div></div>
+</div>
+
+
+
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MODALS — Edit forms
+     ═══════════════════════════════════════════════════════ -->
+
+<!-- Edit Student -->
+<div class="modal-bg" id="modal-student">
+  <div class="modal">
+    <h3>UPDATE STUDENT</h3>
+    <input type="hidden" id="edit-s-id">
+    <div class="form-row">
+      <input id="edit-s-name"  class="f-lg" placeholder="Name">
+      <input id="edit-s-email" class="f-lg" placeholder="Email">
+    </div>
+    <div class="form-row" style="margin-top:.5rem">
+      <input id="edit-s-dept"  class="f-lg" placeholder="Department">
+      <input id="edit-s-sem"   class="f-sm" type="number" placeholder="Semester">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost"   onclick="closeModal('modal-student')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudentEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Skill -->
+<div class="modal-bg" id="modal-skill">
+  <div class="modal">
+    <h3>UPDATE SKILL</h3>
+    <input type="hidden" id="edit-sk-id">
+    <div class="form-row">
+      <input id="edit-sk-name" class="f-xl" placeholder="Skill Name">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost"   onclick="closeModal('modal-skill')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSkillEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project -->
+<div class="modal-bg" id="modal-project">
+  <div class="modal">
+    <h3>UPDATE PROJECT</h3>
+    <input type="hidden" id="edit-p-id">
+    <div class="form-row">
+      <input id="edit-p-name" class="f-xl" placeholder="Project Name">
+    </div>
+    <div class="form-row" style="margin-top:.5rem">
+      <textarea id="edit-p-desc" class="f-xl" placeholder="Description"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost"   onclick="closeModal('modal-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProjectEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-wrap"></div>
+
+
+<script>
+// =====================================================
+// CONFIG
+// =====================================================
+const BASE = "http://127.0.0.1:5000";
+
+
+// =====================================================
+// UTILITIES
+// =====================================================
+
+// Get trimmed input value by element ID
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+// Clear one or more input fields
+function clear(...ids) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+}
+
+// JSON headers for POST/PUT
+function jh() {
+  return { "Content-Type": "application/json" };
+}
+
+// Escape single quotes for inline onclick attributes
+function eq(str) {
+  return (str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+// Toast notification — type: "ok" | "err"
+function toast(msg, type = "ok") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = (type === "ok" ? "✓ " : "✗ ") + msg;
+  document.getElementById("toast-wrap").appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// Sidebar panel switcher
+function show(name) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("panel-" + name).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n => {
+    if (n.textContent.toLowerCase().replace(/\s+/g, '_').includes(name.replace(' ', '_'))) {
+      n.classList.add("active");
+    }
+  });
+}
+
+// Open / close modal
+function openModal(id)  { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+// Close modal on clicking dark overlay
+document.querySelectorAll(".modal-bg").forEach(bg => {
+  bg.addEventListener("click", e => { if (e.target === bg) bg.classList.remove("open"); });
+});
+
+// Generic fetch wrapper — returns parsed JSON or shows error
+async function api(url, opts = {}) {
+  try {
+    const res  = await fetch(BASE + url, opts);
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    toast("Network error: " + e.message, "err");
+    return { error: e.message };
+  }
+}
+
+// Render a list or an empty state into a container
+function render(containerId, html) {
+  document.getElementById(containerId).innerHTML =
+    html || '<div class="empty">No results found</div>';
+}
+
+
+// =====================================================
+// TABLE 1: STUDENTS
+// =====================================================
+
+// SELECT ALL
+async function loadStudents() {
+  const data = await api('/students');
+  if (data.error) return toast(data.error, "err");
+  render("students-list", data.map(studentCard).join(''));
+}
+
+// SELECT with search
+async function searchStudents() {
+  const q = val("s-search");
+  if (!q) return loadStudents();
+  const data = await api('/students/search?q=' + encodeURIComponent(q));
+  if (data.error) return toast(data.error, "err");
+  render("students-list", data.map(studentCard).join(''));
+}
+
+// Card HTML for one student
+function studentCard(s) {
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">${s.name} <span class="badge b-blue">ID ${s.student_id}</span></div>
+      <div class="card-meta">
+        📧 <b>${s.email}</b> &nbsp;|&nbsp;
+        🏛 <b>${s.department}</b> &nbsp;|&nbsp;
+        Semester <b>${s.semester}</b> &nbsp;|&nbsp;
+        Joined <b>${s.created_at.split('T')[0]}</b>
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-warn btn-sm"
+        onclick="openEditStudent(${s.student_id},'${eq(s.name)}','${eq(s.email)}','${eq(s.department)}',${s.semester})">
+        Edit
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.student_id})">Delete</button>
+    </div>
+  </div>`;
+}
+
+// INSERT
+async function createStudent() {
+  const body = {
+    name: val("s-name"), email: val("s-email"), password: val("s-pass"),
+    department: val("s-dept"), semester: +val("s-sem")
+  };
+  if (!body.name || !body.email || !body.password || !body.department || !body.semester)
+    return toast("Fill all student fields", "err");
+  const data = await api('/students', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Student inserted");
+  clear("s-name","s-email","s-pass","s-dept","s-sem");
+  loadStudents();
+}
+
+// Open UPDATE modal
+function openEditStudent(id, name, email, dept, sem) {
+  document.getElementById("edit-s-id").value    = id;
+  document.getElementById("edit-s-name").value  = name;
+  document.getElementById("edit-s-email").value = email;
+  document.getElementById("edit-s-dept").value  = dept;
+  document.getElementById("edit-s-sem").value   = sem;
+  openModal("modal-student");
+}
+
+// UPDATE
+async function saveStudentEdit() {
+  const id   = val("edit-s-id");
+  const body = {
+    name: document.getElementById("edit-s-name").value,
+    email: document.getElementById("edit-s-email").value,
+    department: document.getElementById("edit-s-dept").value,
+    semester: +document.getElementById("edit-s-sem").value
+  };
+  const data = await api(`/students/${id}`, { method:"PUT", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Student updated");
+  closeModal("modal-student");
+  loadStudents();
+}
+
+// DELETE
+async function deleteStudent(id) {
+  if (!confirm("Delete student ID " + id + "? This also deletes their projects and applications.")) return;
+  const data = await api(`/students/${id}`, { method:"DELETE" });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadStudents();
+}
+
+
+// =====================================================
+// TABLE 2: SKILLS
+// =====================================================
+
+// SELECT ALL
+async function loadSkills() {
+  const data = await api('/skills');
+  if (data.error) return toast(data.error, "err");
+  render("skills-list", data.map(skillCard).join(''));
+}
+
+// SELECT with search
+async function searchSkills() {
+  const q = val("sk-search");
+  if (!q) return loadSkills();
+  const data = await api('/skills/search?q=' + encodeURIComponent(q));
+  if (data.error) return toast(data.error, "err");
+  render("skills-list", data.map(skillCard).join(''));
+}
+
+function skillCard(s) {
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">${s.skill_name} <span class="badge b-purple">ID ${s.skill_id}</span></div>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-warn btn-sm" onclick="openEditSkill(${s.skill_id},'${eq(s.skill_name)}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteSkill(${s.skill_id})">Delete</button>
+    </div>
+  </div>`;
+}
+
+// INSERT
+async function createSkill() {
+  const body = { skill_name: val("sk-name") };
+  if (!body.skill_name) return toast("Enter skill name", "err");
+  const data = await api('/skills', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill inserted");
+  clear("sk-name");
+  loadSkills();
+}
+
+function openEditSkill(id, name) {
+  document.getElementById("edit-sk-id").value   = id;
+  document.getElementById("edit-sk-name").value = name;
+  openModal("modal-skill");
+}
+
+// UPDATE
+async function saveSkillEdit() {
+  const id   = val("edit-sk-id");
+  const body = { skill_name: document.getElementById("edit-sk-name").value };
+  const data = await api(`/skills/${id}`, { method:"PUT", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill updated");
+  closeModal("modal-skill");
+  loadSkills();
+}
+
+// DELETE
+async function deleteSkill(id) {
+  if (!confirm("Delete skill ID " + id + "?")) return;
+  const data = await api(`/skills/${id}`, { method:"DELETE" });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadSkills();
+}
+
+
+// =====================================================
+// TABLE 3: STUDENT_SKILLS
+// =====================================================
+
+// SELECT ALL
+async function loadStudentSkills() {
+  const data = await api('/student_skills');
+  if (data.error) return toast(data.error, "err");
+  render("student_skills-list", data.map(ssCard).join(''));
+}
+
+// SEARCH by student_id and/or skill_id
+async function searchStudentSkills() {
+  const sid  = val("ss-search-sid");
+  const skid = val("ss-search-skid");
+  const params = new URLSearchParams();
+  if (sid)  params.set('student_id', sid);
+  if (skid) params.set('skill_id',   skid);
+  const data = await api('/student_skills/search?' + params.toString());
+  if (data.error) return toast(data.error, "err");
+  render("student_skills-list", data.map(ssCard).join(''));
+}
+
+function ssCard(r) {
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">
+        <span class="badge b-blue">Student ${r.student_id}</span> ${r.student_name}
+        &nbsp;→&nbsp;
+        <span class="badge b-purple">Skill ${r.skill_id}</span> ${r.skill_name}
+      </div>
+    </div>
+  </div>`;
+}
+
+// INSERT — assign skill to student
+async function assignStudentSkill() {
+  const body = { student_id: +val("ss-sid"), skill_id: +val("ss-skid") };
+  if (!body.student_id || !body.skill_id) return toast("Enter Student ID and Skill ID", "err");
+  const data = await api('/student_skills', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill assigned to student");
+  clear("ss-sid","ss-skid");
+  loadStudentSkills();
+}
+
+// DELETE — remove skill from student
+async function removeStudentSkill() {
+  const body = { student_id: +val("ss-del-sid"), skill_id: +val("ss-del-skid") };
+  if (!body.student_id || !body.skill_id) return toast("Enter Student ID and Skill ID", "err");
+  if (!confirm(`Remove skill ${body.skill_id} from student ${body.student_id}?`)) return;
+  const data = await api('/student_skills', { method:"DELETE", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill removed from student");
+  clear("ss-del-sid","ss-del-skid");
+  loadStudentSkills();
+}
+
+
+// =====================================================
+// TABLE 4: PROJECTS
+// =====================================================
+
+// SELECT ALL
+async function loadProjects() {
+  const data = await api('/projects');
+  if (data.error) return toast(data.error, "err");
+  render("projects-list", data.map(projectCard).join(''));
+}
+
+// SEARCH by keyword and/or owner_id
+async function searchProjects() {
+  const q   = val("p-search-q");
+  const oid = val("p-search-oid");
+  const params = new URLSearchParams();
+  if (q)   params.set('q',        q);
+  if (oid) params.set('owner_id', oid);
+  const data = await api('/projects/search?' + params.toString());
+  if (data.error) return toast(data.error, "err");
+  render("projects-list", data.map(projectCard).join(''));
+}
+
+function projectCard(p) {
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">${p.project_name}
+        <span class="badge b-blue">ID ${p.project_id}</span>
+      </div>
+      <div class="card-meta">
+        👤 Owner: <b>${p.owner_name}</b> (ID ${p.owner_id}) &nbsp;|&nbsp;
+        📅 <b>${p.date_posted}</b>
+      </div>
+      <div class="card-meta">${p.description || ''}</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-warn btn-sm"
+        onclick="openEditProject(${p.project_id},'${eq(p.project_name)}','${eq(p.description||'')}')">
+        Edit
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.project_id})">Delete</button>
+    </div>
+  </div>`;
+}
+
+// INSERT
+async function createProject() {
+  const body = {
+    owner_id:     +val("p-owner"),
+    project_name: val("p-name"),
+    description:  val("p-desc")
+  };
+  if (!body.owner_id || !body.project_name) return toast("Owner ID and Project Name required", "err");
+  const data = await api('/projects', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Project inserted");
+  clear("p-name","p-owner","p-desc");
+  loadProjects();
+}
+
+function openEditProject(id, name, desc) {
+  document.getElementById("edit-p-id").value   = id;
+  document.getElementById("edit-p-name").value = name;
+  document.getElementById("edit-p-desc").value = desc;
+  openModal("modal-project");
+}
+
+// UPDATE
+async function saveProjectEdit() {
+  const id   = val("edit-p-id");
+  const body = {
+    project_name: document.getElementById("edit-p-name").value,
+    description:  document.getElementById("edit-p-desc").value
+  };
+  const data = await api(`/projects/${id}`, { method:"PUT", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Project updated");
+  closeModal("modal-project");
+  loadProjects();
+}
+
+// DELETE
+async function deleteProject(id) {
+  if (!confirm("Delete project ID " + id + "? Applications for it will also be removed.")) return;
+  const data = await api(`/projects/${id}`, { method:"DELETE" });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadProjects();
+}
+
+
+// =====================================================
+// TABLE 5: PROJECT_SKILLS
+// =====================================================
+
+// SELECT ALL
+async function loadProjectSkills() {
+  const data = await api('/project_skills');
+  if (data.error) return toast(data.error, "err");
+  render("project_skills-list", data.map(psCard).join(''));
+}
+
+// SEARCH
+async function searchProjectSkills() {
+  const pid  = val("ps-search-pid");
+  const skid = val("ps-search-skid");
+  const params = new URLSearchParams();
+  if (pid)  params.set('project_id', pid);
+  if (skid) params.set('skill_id',   skid);
+  const data = await api('/project_skills/search?' + params.toString());
+  if (data.error) return toast(data.error, "err");
+  render("project_skills-list", data.map(psCard).join(''));
+}
+
+function psCard(r) {
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">
+        <span class="badge b-blue">Project ${r.project_id}</span> ${r.project_name}
+        &nbsp;→&nbsp;
+        <span class="badge b-purple">Skill ${r.skill_id}</span> ${r.skill_name}
+      </div>
+    </div>
+  </div>`;
+}
+
+// INSERT — add required skill to project
+async function addProjectSkill() {
+  const body = { project_id: +val("ps-pid"), skill_id: +val("ps-skid") };
+  if (!body.project_id || !body.skill_id) return toast("Enter Project ID and Skill ID", "err");
+  const data = await api('/project_skills', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill added to project");
+  clear("ps-pid","ps-skid");
+  loadProjectSkills();
+}
+
+// DELETE — remove required skill from project
+async function removeProjectSkill() {
+  const body = { project_id: +val("ps-del-pid"), skill_id: +val("ps-del-skid") };
+  if (!body.project_id || !body.skill_id) return toast("Enter Project ID and Skill ID", "err");
+  if (!confirm(`Remove skill ${body.skill_id} from project ${body.project_id}?`)) return;
+  const data = await api('/project_skills', { method:"DELETE", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Skill removed from project");
+  clear("ps-del-pid","ps-del-skid");
+  loadProjectSkills();
+}
+
+
+// =====================================================
+// TABLE 6: APPLICATIONS
+// =====================================================
+
+// SELECT ALL
+async function loadApplications() {
+  const data = await api('/applications');
+  if (data.error) return toast(data.error, "err");
+  render("applications-list", data.map(appCard).join(''));
+}
+
+// SEARCH by student_id, project_id, status
+async function searchApplications() {
+  const sid    = val("a-search-sid");
+  const pid    = val("a-search-pid");
+  const status = document.getElementById("a-search-status").value;
+  const params = new URLSearchParams();
+  if (sid)    params.set('student_id', sid);
+  if (pid)    params.set('project_id', pid);
+  if (status) params.set('status',     status);
+  const data = await api('/applications/search?' + params.toString());
+  if (data.error) return toast(data.error, "err");
+  render("applications-list", data.map(appCard).join(''));
+}
+
+function appCard(a) {
+  const sc = a.status === "approved" ? "b-green"
+           : a.status === "rejected" ? "b-red"
+           : "b-yellow";
+  return `
+  <div class="card">
+    <div class="card-body">
+      <div class="card-name">
+        <span class="badge b-blue">App ${a.application_id}</span>
+        ${a.student_name} → <em>${a.project_name}</em>
+        <span class="badge ${sc}">${a.status}</span>
+      </div>
+      <div class="card-meta">
+        Student ID <b>${a.student_id}</b> | Project ID <b>${a.project_id}</b>
+        | Applied <b>${a.date_applied}</b>
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-success btn-sm" onclick="quickStatus(${a.application_id},'approved')">✓</button>
+      <button class="btn btn-danger  btn-sm" onclick="quickStatus(${a.application_id},'rejected')">✗</button>
+      <button class="btn btn-ghost   btn-sm" onclick="quickDelete(${a.application_id})">Withdraw</button>
+    </div>
+  </div>`;
+}
+
+// INSERT — student applies to project
+async function createApplication() {
+  const body = { student_id: +val("a-sid"), project_id: +val("a-pid") };
+  if (!body.student_id || !body.project_id) return toast("Enter Student ID and Project ID", "err");
+  const data = await api('/applications', { method:"POST", headers:jh(), body:JSON.stringify(body) });
+  if (data.error) return toast(data.error, "err");
+  toast("Application submitted");
+  clear("a-sid","a-pid");
+  loadApplications();
+}
+
+// UPDATE status from the dedicated form
+async function updateAppStatus() {
+  const id     = val("a-upd-id");
+  const status = document.getElementById("a-upd-status").value;
+  if (!id) return toast("Enter Application ID", "err");
+  const data = await api(`/applications/${id}`, {
+    method:"PUT", headers:jh(), body:JSON.stringify({ status })
+  });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadApplications();
+}
+
+// Quick status buttons on each card
+async function quickStatus(id, status) {
+  const data = await api(`/applications/${id}`, {
+    method:"PUT", headers:jh(), body:JSON.stringify({ status })
+  });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadApplications();
+}
+
+// DELETE from the dedicated form
+async function deleteApplication() {
+  const id = val("a-del-id");
+  if (!id) return toast("Enter Application ID", "err");
+  if (!confirm("Withdraw application ID " + id + "?")) return;
+  const data = await api(`/applications/${id}`, { method:"DELETE" });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  clear("a-del-id");
+  loadApplications();
+}
+
+// Quick delete button on each card
+async function quickDelete(id) {
+  if (!confirm("Withdraw application ID " + id + "?")) return;
+  const data = await api(`/applications/${id}`, { method:"DELETE" });
+  toast(data.message || data.error, data.error ? "err" : "ok");
+  loadApplications();
+}
+
+
+// =====================================================
+// AI RECOMMEND
+// =====================================================
+async function getRecommendations() {
+  const id = val("r-sid");
+  if (!id) return toast("Enter a Student ID", "err");
+  const data = await api('/recommend/' + id);
+  if (data.error) return toast(data.error, "err");
+  render("recommend-list", data.map(recCard).join(''));
+}
+
+function recCard(p) {
+  const col = p.match_percentage >= 70 ? "var(--green)"
+            : p.match_percentage >= 40 ? "var(--yellow)"
+            : "var(--red)";
+  return `
+  <div class="card">
+    <div class="card-body" style="width:100%">
+      <div class="card-name">${p.project_name}
+        <span class="badge b-blue">ID ${p.project_id}</span>
+      </div>
+      <div class="card-meta">
+        Matched <b>${p.matched_skills}</b> of <b>${p.required_skills}</b> required skills
+        &nbsp;|&nbsp;
+        <b style="color:${col}">${p.match_percentage}%</b>
+      </div>
+      <div class="match-bar">
+        <div class="match-fill" style="width:${p.match_percentage}%"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+
+
+// Auto-load students on first open
+loadStudents();
+</script>
+</body>
+</html>
